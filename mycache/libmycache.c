@@ -88,29 +88,27 @@ static int readEntry(int cacheIndex) {
                MYBUCKET_RECORDSIZE; /* Replace 0 with calculation */
 
   do {
-    if (lseek(dbFile, offset, SEEK_SET) != offset) {
-      debug_error("Error seeking into DB file. %s", strerror(errno));
-      if (errno == EINTR) {
-        continue;
-      } else {
-        return -1;
-      }
-    } else {
+    if (lseek(dbFile, offset, SEEK_SET) == offset) {
       break;
+    }
+
+    debug_error("Error seeking into DB file. %s", strerror(errno));
+
+    if (errno != EINTR) {
+      return -1;
     }
   } while (1);
 
   do {
-    if (read(dbFile, CacheEntries[cacheIndex].record, MYBUCKET_RECORDSIZE) !=
+    if (read(dbFile, CacheEntries[cacheIndex].record, MYBUCKET_RECORDSIZE) ==
         MYBUCKET_RECORDSIZE) {
-      debug_error("Error reading from DB file. %s", strerror(errno));
-      if (errno == EINTR) {
-        continue;
-      } else {
-        return -1;
-      }
-    } else {
       break;
+    }
+
+    debug_error("Error reading from DB file. %s", strerror(errno));
+
+    if (errno != EINTR) {
+      return -1;
     }
   } while (1);
 
@@ -132,29 +130,27 @@ static int writeEntry(int cacheIndex) {
                MYBUCKET_RECORDSIZE; /* Replace 0 with calculation */
 
   do {
-    if (lseek(dbFile, offset, SEEK_SET) != offset) {
-      debug_error("Error seeking into DB file. %s", strerror(errno));
-      if (errno == EINTR) {
-        continue;
-      } else {
-        return -1;
-      }
-    } else {
+    if (lseek(dbFile, offset, SEEK_SET) == offset) {
       break;
+    }
+
+    debug_error("Error seeking into DB file. %s", strerror(errno));
+
+    if (errno != EINTR) {
+      return -1;
     }
   } while (1);
 
   do {
-    if (write(dbFile, CacheEntries[cacheIndex].record, MYBUCKET_RECORDSIZE) !=
+    if (write(dbFile, CacheEntries[cacheIndex].record, MYBUCKET_RECORDSIZE) ==
         MYBUCKET_RECORDSIZE) {
-      debug_error("Error writing to DB file. %s", strerror(errno));
-      if (errno == EINTR) {
-        continue;
-      } else {
-        return -1;
-      }
-    } else {
       break;
+    }
+
+    debug_error("Error writing to DB file. %s", strerror(errno));
+
+    if (errno != EINTR) {
+      return -1;
     }
   } while (1);
 
@@ -252,6 +248,7 @@ int MYC_readEntry(int fileIndex, MYRECORD_RECORD_t *record) {
     debug_error("Error reading entry from cache.");
     return -1;
   }
+
   myb_bucket2record(&CacheEntries[cacheIndex], record);
   debug_debug("Entry %d read from cache.", fileIndex);
 

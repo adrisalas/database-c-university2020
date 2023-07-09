@@ -83,17 +83,18 @@ int STORC_read(int fileIndex, MYRECORD_RECORD_t *record) {
   debug_verbose("Sending request to server (idx=%d).", fileIndex);
   do {
     status = msgsnd(message_queue, &request, sizeof(request_message_t), 0);
-    if (-1 == status) {
-      if (errno == EIDRM) {
-        perror("Message queue is removed");
-        return -1;
-      } else {
-        perror("Error sending message, retrying");
-        continue;
-      }
-    } else {
+
+    if (-1 != status) {
       break;
     }
+
+    if (errno == EIDRM) {
+      perror("Message queue is removed");
+      return -1;
+    }
+
+    perror("Error sending message, retrying");
+
   } while (1);
 
   debug_verbose("Receiving answer from server (client id=%ld).",
@@ -101,21 +102,21 @@ int STORC_read(int fileIndex, MYRECORD_RECORD_t *record) {
   do {
     status =
         msgrcv(message_queue, &answer, sizeof(answer_message_t), getpid(), 0);
-    if (-1 == status) {
-      if (errno == EIDRM) {
-        perror("Message queue is removed");
-        return -1;
-      } else {
-        perror("Error receiving message, retrying");
-        continue;
-      }
-    } else {
+
+    if (-1 != status) {
       break;
     }
+    if (errno == EIDRM) {
+      perror("Message queue is removed");
+      return -1;
+    }
+
+    perror("Error receiving message, retrying");
 
   } while (1);
 
   debug_debug("Answer received from server (status=%d).", answer.status);
+
   if (-1 != answer.status) {
     memcpy(record, &(answer.data), sizeof(MYRECORD_RECORD_t));
   }
@@ -146,17 +147,18 @@ int STORC_write(int fileIndex, MYRECORD_RECORD_t *record) {
 
   do {
     status = msgsnd(message_queue, &request, sizeof(request_message_t), 0);
-    if (-1 == status) {
-      if (errno == EIDRM) {
-        perror("Message queue is removed");
-        return -1;
-      } else {
-        perror("Error sending message, retrying");
-        continue;
-      }
-    } else {
+
+    if (-1 != status) {
       break;
     }
+
+    if (errno == EIDRM) {
+      perror("Message queue is removed");
+      return -1;
+    }
+
+    perror("Error sending message, retrying");
+
   } while (1);
 
   debug_verbose("Receiving answer from server (client id=%ld).",
@@ -165,20 +167,22 @@ int STORC_write(int fileIndex, MYRECORD_RECORD_t *record) {
   do {
     status =
         msgrcv(message_queue, &answer, sizeof(answer_message_t), getpid(), 0);
-    if (-1 == status) {
-      if (errno == EIDRM) {
-        perror("Message queue is removed");
-        return -1;
-      } else {
-        perror("Error receiving message, retrying");
-        continue;
-      }
-    } else {
+
+    if (-1 != status) {
       break;
     }
+
+    if (errno == EIDRM) {
+      perror("Message queue is removed");
+      return -1;
+    }
+
+    perror("Error receiving message, retrying");
+
   } while (1);
 
   debug_debug("Answer received from server (status=%d).", answer.status);
+
   if (-1 != answer.status) {
     memcpy(record, &(answer.data), sizeof(MYRECORD_RECORD_t));
   }

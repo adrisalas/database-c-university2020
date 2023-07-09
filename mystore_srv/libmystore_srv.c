@@ -80,28 +80,28 @@ int STORS_close() {
 int STORS_readrequest(request_message_t *request) {
 
   debug_verbose("Receiving request from client (type=%d).", MYSAPMT_REQUEST);
+
   int status;
 
   do {
     status = msgrcv(message_queue, request, sizeof(request_message_t),
                     SEND_TO_SERVER, 0);
-    if (-1 == status) {
-      if (errno == EIDRM) {
-        debug_perror("Message queue is removed. ");
-        return -1;
-
-      } else if (errno == EINTR) {
-        debug_debug("Signal received, aborting reading message");
-        return -1;
-      } else {
-        debug_perror("Unexpected error receiving message, retrying. ");
-        continue;
-      }
-    } else {
+    if (-1 != status) {
       break;
     }
 
+    if (errno == EIDRM) {
+      debug_perror("Message queue is removed. ");
+      return -1;
+    } else if (errno == EINTR) {
+      debug_debug("Signal received, aborting reading message");
+      return -1;
+    }
+
+    debug_perror("Unexpected error receiving message, retrying. ");
+
   } while (1);
+
   debug_debug("Request received from client (cliend id=%ld, op=%d, idx=%d).",
               request->return_to, request->requested_op, request->index);
 
@@ -122,22 +122,22 @@ int STORS_sendanswer(answer_message_t *answer) {
   do {
     status = msgsnd(message_queue, answer, sizeof(answer_message_t), 0);
 
-    if (-1 == status) {
-      if (errno == EIDRM) {
-        debug_perror("Message queue is removed");
-        return -1;
-      } else {
-        debug_perror("Error sending message, retrying");
-        continue;
-      }
-    } else {
+    if (-1 != status) {
       break;
     }
+
+    if (errno == EIDRM) {
+      debug_perror("Message queue is removed");
+      return -1;
+    }
+
+    debug_perror("Error sending message, retrying");
 
   } while (1);
 
   debug_debug("Answer sent to client (client id=%ld, status=%d).",
               answer->mtype, answer->status);
+
   return 0;
 }
 
